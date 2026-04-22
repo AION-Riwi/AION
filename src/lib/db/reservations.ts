@@ -6,6 +6,7 @@ export type AvailableTable = Pick<Table, "id" | "number" | "capacity">;
 export interface ReservationFormData {
   name: string;
   email: string;
+  phone: string;
   date: string; // YYYY-MM-DD
   time: string; // HH:MM
   partySize: number;
@@ -92,7 +93,6 @@ export async function createReservation(
     number: number;
   };
 
-  // Paso 1: crear la reserva
   // Paso 1: crear la reserva (usando cliente sin tipos para evitar conflicto)
   const reservationQuery = supabaseRaw
     .from("reservations")

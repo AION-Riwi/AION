@@ -82,6 +82,17 @@ export interface OrderItem {
   unit_price: number;
 }
 
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: "ingredientes" | "servicios" | "nomina" | "equipos" | "otros";
+  date: string;
+  restaurant_id: string;
+  user_id: string | null;
+  created_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -119,6 +130,11 @@ export type Database = {
         Row: OrderItem;
         Insert: Omit<OrderItem, "id">;
         Update: Partial<Omit<OrderItem, "id">>;
+      };
+      expenses: {
+        Row: Expense;
+        Insert: Omit<Expense, "id" | "created_at">;
+        Update: Partial<Omit<Expense, "id" | "created_at">>;
       };
     };
     Views: Record<string, never>;
