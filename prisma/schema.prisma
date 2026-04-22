@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model menu_items {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurant_id String        @db.Uuid
+  name          String
+  description   String?
+  price         Decimal       @db.Decimal(10, 2)
+  category      String
+  available     Boolean       @default(true)
+  cost_price    Decimal?      @db.Decimal(10, 2)
+  stock         Int?          @default(0)
+  min_stock     Int?          @default(5)
+  is_secret     Boolean?      @default(false)
+  image_url     String?
+  restaurants   restaurants   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  order_items   order_items[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id     String     @db.Uuid
+  menu_item_id String     @db.Uuid
+  quantity     Int
+  unit_price   Decimal    @db.Decimal(10, 2)
+  menu_items   menu_items @relation(fields: [menu_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  orders       orders     @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reservation_id String?       @db.Uuid
+  table_id       String?       @db.Uuid
+  status         String        @default("pending")
+  total          Decimal       @default(0) @db.Decimal(10, 2)
+  created_at     DateTime      @default(now()) @db.Timestamptz(6)
+  order_items    order_items[]
+  reservations   reservations? @relation(fields: [reservation_id], references: [id], onUpdate: NoAction)
+  tables         tables?       @relation(fields: [table_id], references: [id], onUpdate: NoAction)
+  sales          sales[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reservations {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  table_id   String   @db.Uuid
+  date       DateTime @db.Date
+  time       DateTime @db.Time(6)
+  party_size Int
+  status     String   @default("pending")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  orders     orders[]
+  tables     tables   @relation(fields: [table_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model restaurants {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  address    String?
+  phone      String?
+  created_at DateTime     @default(now()) @db.Timestamptz(6)
+  menu_items menu_items[]
+  tables     tables[]
+}
+
+model rewards {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  type       String
+  value      String?
+  claimed    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sales {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id       String?  @db.Uuid
+  table_id       String?  @db.Uuid
+  total          Decimal  @db.Decimal(10, 2)
+  payment_method String
+  cash_received  Decimal? @db.Decimal(10, 2)
+  change_given   Decimal? @db.Decimal(10, 2)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  orders         orders?  @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+  tables         tables?  @relation(fields: [table_id], references: [id], onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tables {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurant_id String         @db.Uuid
+  number        Int
+  capacity      Int
+  status        String         @default("available")
+  qr_code       String?
+  orders        orders[]
+  reservations  reservations[]
+  sales         sales[]
+  restaurants   restaurants    @relation(fields: [restaurant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([restaurant_id, number])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_levels {
+  user_id      String @id @db.Uuid
+  level        String @default("explorer")
+  xp           Int    @default(0)
+  total_visits Int    @default(0)
+  users        users  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String         @unique
+  name         String
+  password     String?
+  role         String         @default("customer")
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  reservations reservations[]
+  rewards      rewards[]
+  user_levels  user_levels?
+}
