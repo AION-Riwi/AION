@@ -6,6 +6,13 @@ datasource db {
   provider = "postgresql"
 }
 
+//user Role
+enum Role {
+  customer
+  staff
+  admin
+}
+
 model menu_items {
   id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   restaurant_id String        @db.Uuid
@@ -128,9 +135,12 @@ model users {
   email        String         @unique
   name         String
   password     String?
-  role         String         @default("customer")
-  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  role         Role           @default(customer)
+  locationName String?        // Para staff y admin
+  position     String?        // Para staff
   reservations reservations[]
   rewards      rewards[]
   user_levels  user_levels?
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
 }
+
